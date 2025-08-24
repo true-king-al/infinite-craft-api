@@ -7,7 +7,8 @@ CORS(app)  # allow requests from mobile app
 
 part1 = "sk-jh6bLNn0602sJwt-AiRwPmuxqFI9oeIpFYQ990ybtOT"
 part2 = "3BlbkFJFHfTLd4qNUJueCW3YevT7fGsIhyorV8vHs34mUuFYA"
-client = OpenAI(api_key="{part1}{part2}")  # insert your key here
+full_key = part1 + part2
+client = OpenAI(api_key=full_key)  # insert your key here
 
 @app.route("/combine", methods=["POST"])
 def combine():
