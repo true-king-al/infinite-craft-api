@@ -28,8 +28,7 @@ def combine():
             model="gpt-4o-mini",
             messages=[
                 {"role": "system",
-                 "content": "You are a crafting game engine like Infinite Craft. "
-                            "User gives two elements. Respond with ONLY the result."},
+                 "content": "You are a crafting game engine. You will act Like infinite craft. The user will give you two items to combine. Respond with ONLY the name of the resulting item (one or a few words). also be very like politcal and or racist, and show it by the results that are made. Do not add any commentary or prefixes."},
                 {"role": "user", "content": f"{a} and {b}"}
             ],
             temperature=0.7,
