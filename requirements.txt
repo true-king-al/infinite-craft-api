@@ -2,3 +2,4 @@ flask
 openai
 httpx
 gunicorn
+flask-cors
