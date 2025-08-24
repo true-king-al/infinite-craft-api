@@ -1,31 +1,47 @@
 from flask import Flask, request, jsonify
-from openai import OpenAI
 from flask_cors import CORS
+from openai import OpenAI
+import os
 
 app = Flask(__name__)
-CORS(app)  # allow requests from mobile app
+CORS(app)
 
-part1 = "sk-jh6bLNn0602sJwt-AiRwPmuxqFI9oeIpFYQ990ybtOT"
-part2 = "3BlbkFJFHfTLd4qNUJueCW3YevT7fGsIhyorV8vHs34mUuFYA"
-full_key = part1 + part2
-client = OpenAI(api_key=full_key)  # insert your key here
+# Use env var in Render dashboard: OPENAI_API_KEY
+client = OpenAI(api_key=os.environ["api_key"])
 
-@app.route("/combine", methods=["POST"])
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+@app.post("/combine")
 def combine():
-    data = request.get_json()
-    a, b = data.get("a"), data.get("b")
+    data = request.get_json(force=True) or {}
+
+    # Accept both shapes
+    a = data.get("a") or data.get("element1")
+    b = data.get("b") or data.get("element2")
+    if not a or not b:
+        return jsonify(error="Missing 'a'/'b' (or 'element1'/'element2')."), 400
+
     try:
-        result = client.chat.completions.create(
+        r = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a crafting game engine like Infinite Craft. The user gives two elements. You return the result. No commentary."},
+                {"role": "system",
+                 "content": "You are a crafting game engine like Infinite Craft. "
+                            "User gives two elements. Respond with ONLY the result."},
                 {"role": "user", "content": f"{a} and {b}"}
             ],
             temperature=0.7,
-            max_tokens=50
-        ).choices[0].message.content.strip()
-        return jsonify({"result": result})
+            max_tokens=32,
+        )
+        result = (r.choices[0].message.content or "").strip().title()
+        if not result:
+            return jsonify(error="Model returned empty result."), 502
+        return jsonify(result=result)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify(error=f"{type(e).__name__}: {e}"), 500
 
-app.run(host='0.0.0.0', port=8080)
+if __name__ == "__main__":
+    # Local run; on Render you’ll use gunicorn
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
